@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+                          http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+    <kcfgfile name=""/>
+    <group name="General">
+        <entry name="refreshInterval" type="Int">
+            <label>Cache duration in seconds before fetching new data</label>
+            <default>60</default>
+            <min>30</min>
+            <max>600</max>
+        </entry>
+        <entry name="autoRefreshMinutes" type="Int">
+            <label>Auto-refresh interval in minutes (0 = disabled)</label>
+            <default>10</default>
+            <min>0</min>
+            <max>60</max>
+        </entry>
+        <entry name="credentialSource" type="String">
+            <label>Where to read OAuth credentials from</label>
+            <default>file</default>
+        </entry>
+        <entry name="showExtraUsage" type="Bool">
+            <label>Show extra usage (paid overage) section</label>
+            <default>false</default>
+        </entry>
+        <entry name="showRecentUsage" type="Bool">
+            <label>Show daily usage chart</label>
+            <default>false</default>
+        </entry>
+    </group>
+</kcfg>

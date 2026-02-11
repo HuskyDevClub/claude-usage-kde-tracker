@@ -1,0 +1,21 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Yudong Lin"
+            }
+        ],
+        "Category": "Utilities",
+        "Description": "Track your Claude AI usage limits and quotas",
+        "FormFactors": [
+            "desktop"
+        ],
+        "Icon": "claude",
+        "Id": "com.github.yudonglin.claude-usage-tracker",
+        "License": "GPL-3.0",
+        "Name": "Claude Usage Tracker",
+        "Version": "1.0.0"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0"
+}
