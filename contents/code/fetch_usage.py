@@ -26,12 +26,82 @@ except ImportError:
     sys.exit(1)
 
 OAUTH_USAGE_URL = "https://api.anthropic.com/api/oauth/usage"
+OAUTH_TOKEN_URL = "https://console.anthropic.com/v1/oauth/token"
+OAUTH_CLIENT_ID = "9d1c250a-e61b-44d9-88ed-5944d1962f5e"
 CREDENTIALS_PATH = Path.home() / ".claude" / ".credentials.json"
 CACHE_DIR = Path.home() / ".local" / "share" / "claude-usage-tracker"
 
 
+def _is_token_expired(oauth_data: dict) -> bool:
+    """Check if the access token is expired."""
+    expires_at = oauth_data.get("expiresAt")
+    if not expires_at or not isinstance(expires_at, (int, float)):
+        return False
+    if expires_at > 1e12:  # milliseconds
+        expires_at = expires_at / 1000
+    return datetime.fromtimestamp(expires_at) < datetime.now()
+
+
+def _refresh_token(credentials_data: dict) -> tuple[str | None, str | None]:
+    """Refresh the OAuth access token using the refresh token.
+
+    Updates the credentials file on success.
+
+    Returns:
+        Tuple of (access_token, subscription_type) or (None, None) on failure.
+    """
+    oauth_data = credentials_data.get("claudeAiOauth", {})
+    refresh_token = oauth_data.get("refreshToken")
+    if not refresh_token:
+        return None, None
+
+    try:
+        response = requests.post(
+            OAUTH_TOKEN_URL,
+            json={
+                "grant_type": "refresh_token",
+                "client_id": OAUTH_CLIENT_ID,
+                "refresh_token": refresh_token,
+            },
+            headers={"Content-Type": "application/json"},
+            timeout=15,
+        )
+
+        if response.status_code != 200:
+            return None, None
+
+        token_data = response.json()
+        new_access_token = token_data.get("access_token")
+        if not new_access_token:
+            return None, None
+
+        # Update credentials in memory and on disk
+        oauth_data["accessToken"] = new_access_token
+        if token_data.get("refresh_token"):
+            oauth_data["refreshToken"] = token_data["refresh_token"]
+        if token_data.get("expires_in"):
+            oauth_data["expiresAt"] = int(
+                (datetime.now().timestamp() + token_data["expires_in"]) * 1000
+            )
+
+        credentials_data["claudeAiOauth"] = oauth_data
+        try:
+            with open(CREDENTIALS_PATH, "w") as f:
+                json.dump(credentials_data, f)
+        except OSError:
+            pass  # Token still usable even if we can't save it
+
+        subscription_type = oauth_data.get("subscriptionType", "unknown")
+        return new_access_token, subscription_type
+
+    except (requests.exceptions.RequestException, json.JSONDecodeError):
+        return None, None
+
+
 def load_credentials_from_file() -> tuple[str | None, str | None]:
     """Load OAuth credentials from the Claude Code CLI credentials file.
+
+    Automatically refreshes expired tokens using the refresh token.
 
     Returns:
         Tuple of (access_token, subscription_type) or (None, None) on failure.
@@ -50,15 +120,9 @@ def load_credentials_from_file() -> tuple[str | None, str | None]:
         if not token:
             return None, None
 
-        # Check if the token is expired
-        expires_at = oauth_data.get("expiresAt")
-        if expires_at:
-            # expiresAt is in milliseconds
-            if isinstance(expires_at, (int, float)):
-                if expires_at > 1e12:  # milliseconds
-                    expires_at = expires_at / 1000
-                if datetime.fromtimestamp(expires_at) < datetime.now():
-                    return None, None
+        # If token is expired, try to refresh it
+        if _is_token_expired(oauth_data):
+            return _refresh_token(data)
 
         return token, subscription_type
     except (json.JSONDecodeError, IOError, OSError):
@@ -121,6 +185,17 @@ def parse_usage_item(data: dict, api_key: str) -> dict[str, Any]:
     return result
 
 
+def _make_usage_request(token: str) -> requests.Response:
+    """Make a GET request to the usage API."""
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "anthropic-beta": "oauth-2025-04-20",
+        "Accept": "application/json",
+    }
+    return requests.get(OAUTH_USAGE_URL, headers=headers, timeout=15)
+
+
 def fetch_usage(credential_source: str = "file") -> dict[str, Any]:
     """Fetch current usage data from Claude OAuth API."""
     result = create_empty_result()
@@ -141,15 +216,21 @@ def fetch_usage(credential_source: str = "file") -> dict[str, Any]:
 
     result["subscriptionType"] = subscription_type or "unknown"
 
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-        "anthropic-beta": "oauth-2025-04-20",
-        "Accept": "application/json",
-    }
-
     try:
-        response = requests.get(OAUTH_USAGE_URL, headers=headers, timeout=15)
+        response = _make_usage_request(token)
+
+        # On 401, try refreshing the token once (file source only)
+        if response.status_code == 401 and credential_source == "file":
+            try:
+                with open(CREDENTIALS_PATH, "r") as f:
+                    cred_data = json.load(f)
+                new_token, new_sub = _refresh_token(cred_data)
+                if new_token:
+                    token = new_token
+                    result["subscriptionType"] = new_sub or "unknown"
+                    response = _make_usage_request(token)
+            except (json.JSONDecodeError, IOError, OSError):
+                pass
 
         if response.status_code == 401:
             result["error"] = "Session expired. Run: claude login"
