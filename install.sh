@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-WIDGET_ID="com.github.yudonglin.claude-usage-tracker"
+WIDGET_ID="com.github.huskydevclub.claude-usage-kde-tracker"
 WIDGET_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Check if already installed — upgrade instead
@@ -16,7 +16,6 @@ fi
 # Clear QML cache so Plasma picks up the new files
 rm -rf ~/.cache/plasmashell/qmlcache
 
-echo "Done. Restarting plasmashell to apply changes..."
-plasmashell --replace &disown 2>/dev/null
-
+echo "Done. Restart plasmashell or log out/in to apply changes."
+echo "  To restart manually: plasmashell --replace &disown"
 echo "Add the widget via: right-click panel → Add Widgets → search 'Claude'"

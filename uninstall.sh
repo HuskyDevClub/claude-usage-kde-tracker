@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-WIDGET_ID="com.github.yudonglin.claude-usage-tracker"
+WIDGET_ID="com.github.huskydevclub.claude-usage-kde-tracker"
 
 if kpackagetool6 --type Plasma/Applet --list 2>/dev/null | grep -q "^${WIDGET_ID}$"; then
     kpackagetool6 --type Plasma/Applet --remove "$WIDGET_ID"

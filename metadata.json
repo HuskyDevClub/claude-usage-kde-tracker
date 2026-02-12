@@ -3,7 +3,7 @@
     "KPlugin": {
         "Authors": [
             {
-                "Name": "Yudong Lin"
+                "Name": "Wynter Lin"
             }
         ],
         "Category": "Utilities",
@@ -12,10 +12,11 @@
             "desktop"
         ],
         "Icon": "claude",
-        "Id": "com.github.yudonglin.claude-usage-tracker",
+        "Id": "com.github.huskydevclub.claude-usage-kde-tracker",
         "License": "GPL-3.0",
         "Name": "Claude Usage Tracker",
-        "Version": "1.0.0"
+        "Version": "1.0.0",
+        "Website": "https://github.com/HuskyDevClub/claude-usage-kde-tracker"
     },
     "X-Plasma-API-Minimum-Version": "6.0"
 }
