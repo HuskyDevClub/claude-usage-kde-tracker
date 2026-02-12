@@ -9,7 +9,6 @@ KCM.SimpleKCM {
     property int cfg_refreshIntervalDefault: 60
     property alias cfg_autoRefreshMinutes: autoRefreshSpinBox.value
     property int cfg_autoRefreshMinutesDefault: 10
-    property string cfg_credentialSource: "file"
     property alias cfg_showExtraUsage: showExtraUsageCheckBox.checked
     property bool cfg_showExtraUsageDefault: false
     property alias cfg_showRecentUsage: showRecentUsageCheckBox.checked
@@ -63,28 +62,6 @@ KCM.SimpleKCM {
 
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
-        }
-
-        QQC2.ComboBox {
-            id: credentialSourceCombo
-            Kirigami.FormData.label: i18nc("@label:combobox", "Credential source:")
-            model: [
-                {text: i18nc("@item:inlistbox", "Credentials File (~/.claude)"), value: "file"},
-                {text: i18nc("@item:inlistbox", "KDE Wallet"), value: "kwallet"}
-            ]
-            textRole: "text"
-            currentIndex: cfg_credentialSource === "kwallet" ? 1 : 0
-            onActivated: function (index) {
-                cfg_credentialSource = model[index].value
-            }
-        }
-
-        QQC2.Label {
-            text: cfg_credentialSource === "kwallet"
-                ? i18nc("@info", "Token will be read from KDE Wallet")
-                : i18nc("@info", "Token will be read from ~/.claude/.credentials.json")
-            opacity: 0.7
-            wrapMode: Text.WordWrap
         }
 
         Kirigami.Separator {

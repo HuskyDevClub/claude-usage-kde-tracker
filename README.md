@@ -10,7 +10,7 @@ A KDE Plasma 6 widget that displays your Claude AI usage limits and quotas direc
 - **Extra usage tracking** for paid overage credits
 - **Daily usage bar chart** for recent usage history
 - **Configurable auto-refresh** and cache duration
-- **Credential support** for both Claude Code CLI credentials file and KDE Wallet
+- **Auto-login** via Claude Code CLI credentials
 - **Pin popup** to keep the detail view open
 
 ## Requirements
@@ -43,19 +43,6 @@ Right-click the widget and select **Configure** to adjust:
 |---|---|---|
 | Cache duration | 60s | How long to cache API responses before fetching fresh data (30-600s) |
 | Auto-refresh | 10 min | Background refresh interval; set to 0 to disable (0-60 min) |
-| Credential source | File | Read tokens from `~/.claude/.credentials.json` or KDE Wallet |
-
-### KDE Wallet setup
-
-To use KDE Wallet instead of the credentials file:
-
-```bash
-# Store your OAuth token in KDE Wallet
-echo "YOUR_TOKEN" | python3 contents/code/kwallet_helper.py write
-```
-
-Then switch the credential source to **KDE Wallet** in the widget settings.
-
 ## How it works
 
 The widget calls the Anthropic OAuth usage API (`/api/oauth/usage`) using credentials from Claude Code CLI. A Python script ([fetch_usage.py](contents/code/fetch_usage.py)) handles authentication and API communication, while the QML frontend renders the data as interactive progress bars and charts.

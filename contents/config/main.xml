@@ -17,10 +17,6 @@
             <min>0</min>
             <max>60</max>
         </entry>
-        <entry name="credentialSource" type="String">
-            <label>Where to read OAuth credentials from</label>
-            <default>file</default>
-        </entry>
         <entry name="showExtraUsage" type="Bool">
             <label>Show extra usage (paid overage) section</label>
             <default>false</default>

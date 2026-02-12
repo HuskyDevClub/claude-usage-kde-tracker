@@ -159,8 +159,7 @@ PlasmoidItem {
         errorMessage = ""
 
         var scriptPath = Qt.resolvedUrl("../code/fetch_usage.py").toString().replace("file://", "")
-        var credSource = Plasmoid.configuration.credentialSource || "file"
-        executable.exec("python3 " + scriptPath + " --credential-source " + credSource)
+        executable.exec("python3 " + scriptPath)
     }
 
     // Parse API response with validation
