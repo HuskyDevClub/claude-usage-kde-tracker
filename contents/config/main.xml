@@ -19,7 +19,7 @@
         </entry>
         <entry name="showExtraUsage" type="Bool">
             <label>Show extra usage (paid overage) section</label>
-            <default>false</default>
+            <default>true</default>
         </entry>
         <entry name="showRecentUsage" type="Bool">
             <label>Show daily usage chart</label>

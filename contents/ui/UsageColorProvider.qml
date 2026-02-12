@@ -1,15 +1,16 @@
 import QtQuick
 import org.kde.kirigami as Kirigami
 
-QtObject {
+Item {
     id: colorProvider
+    visible: false
 
-    readonly property int criticalThreshold: 90
-    readonly property int warningThreshold: 75
+    property int criticalThreshold: 90
+    property int warningThreshold: 75
 
     function getColorForPercent(percent) {
         if (percent >= criticalThreshold) return Kirigami.Theme.negativeTextColor
-        if (percent >= warningThreshold)
-
+        if (percent >= warningThreshold) return Kirigami.Theme.neutralTextColor
+        return Kirigami.Theme.positiveTextColor
     }
 }

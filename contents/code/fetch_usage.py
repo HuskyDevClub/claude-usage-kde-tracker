@@ -1,16 +1,18 @@
 import json
-import sys
+import os
+import tempfile
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 try:
     import requests
 except ImportError:
+    import sys
+
     print(
         json.dumps(
             {
-                "error": "Python 'requests' module not installed. Run: pip install requests"
+                "error": "Python 'requests' module not installed. Run: python3 -m pip install requests"
             }
         )
     )
@@ -19,15 +21,36 @@ except ImportError:
 OAUTH_USAGE_URL = "https://api.anthropic.com/api/oauth/usage"
 OAUTH_TOKEN_URL = "https://console.anthropic.com/v1/oauth/token"
 OAUTH_CLIENT_ID = "9d1c250a-e61b-44d9-88ed-5944d1962f5e"
-CREDENTIALS_PATH = Path.home() / ".claude" / ".credentials.json"
-CACHE_DIR = Path.home() / ".local" / "share" / "claude-usage-tracker"
+CREDENTIALS_PATH = os.path.join(os.path.expanduser("~"), ".claude", ".credentials.json")
+CACHE_DIR = os.path.join(
+    os.path.expanduser("~"), ".local", "share", "claude-usage-tracker"
+)
+
+
+def _atomic_write_json(filepath: str, data: Any, mode: int = 0o600) -> None:
+    """Write JSON to a file atomically using write-to-temp-then-rename.
+
+    Prevents data corruption if the process is interrupted mid-write.
+    """
+    dir_path = os.path.dirname(filepath)
+    fd, tmp_path = tempfile.mkstemp(dir=dir_path, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as f:
+            json.dump(data, f, indent=2)
+        os.chmod(tmp_path, mode)
+        os.rename(tmp_path, filepath)
+    except OSError:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
 
 
 def _is_token_expired(oauth_data: dict) -> bool:
     """Check if the access token is expired."""
     expires_at = oauth_data.get("expiresAt")
     if not expires_at or not isinstance(expires_at, (int, float)):
-        return False
+        return True
     if expires_at > 1e12:  # milliseconds
         expires_at = expires_at / 1000
     return datetime.fromtimestamp(expires_at) < datetime.now()
@@ -76,11 +99,7 @@ def _refresh_token(credentials_data: dict) -> tuple[str | None, str | None]:
             )
 
         credentials_data["claudeAiOauth"] = oauth_data
-        try:
-            with open(CREDENTIALS_PATH, "w") as f:
-                json.dump(credentials_data, f)
-        except OSError:
-            pass  # Token still usable even if we can't save it
+        _atomic_write_json(CREDENTIALS_PATH, credentials_data)
 
         subscription_type = oauth_data.get("subscriptionType", "unknown")
         return new_access_token, subscription_type
@@ -97,7 +116,7 @@ def load_credentials_from_file() -> tuple[str | None, str | None]:
     Returns:
         Tuple of (access_token, subscription_type) or (None, None) on failure.
     """
-    if not CREDENTIALS_PATH.exists():
+    if not os.path.exists(CREDENTIALS_PATH):
         return None, None
 
     try:
@@ -152,7 +171,6 @@ def _make_usage_request(token: str) -> requests.Response:
     """Make a GET request to the usage API."""
     headers = {
         "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
         "anthropic-beta": "oauth-2025-04-20",
         "Accept": "application/json",
     }
@@ -225,17 +243,72 @@ def fetch_usage() -> dict[str, Any]:
     return result
 
 
+def update_daily_history(usage: dict[str, Any]) -> list[dict[str, Any]]:
+    """Update daily usage history and return the last 7 days as an array.
+
+    Each entry records the peak session usage observed for that date.
+    """
+    history_file = os.path.join(CACHE_DIR, "history.json")
+    history: dict[str, dict[str, Any]] = {}
+
+    try:
+        if os.path.exists(history_file):
+            with open(history_file, "r") as f:
+                history = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        history = {}
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    session_pct = usage.get("session", {}).get("used", 0)
+    weekly_pct = usage.get("weekly", {}).get("used", 0)
+
+    # Keep the peak session usage for each day
+    existing = history.get(today, {})
+    prev_session = existing.get("session", 0)
+    history[today] = {
+        "session": max(session_pct, prev_session),
+        "weekly": weekly_pct,
+    }
+
+    # Prune entries older than 7 days
+    cutoff = datetime.now().timestamp() - 7 * 86400
+    history = {
+        date: data
+        for date, data in history.items()
+        if datetime.strptime(date, "%Y-%m-%d").timestamp() >= cutoff
+    }
+
+    _atomic_write_json(history_file, history)
+
+    # Convert to sorted array for QML consumption
+    day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    result = []
+    for date_str in sorted(history.keys()):
+        dt = datetime.strptime(date_str, "%Y-%m-%d")
+        day_name = day_names[dt.weekday()]
+        entry = history[date_str]
+        result.append(
+            {
+                "day": day_name,
+                "date": date_str,
+                "percent": entry.get("session", 0),
+            }
+        )
+
+    return result
+
+
 def main() -> None:
     usage = fetch_usage()
 
-    # Cache result
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    cache_file = CACHE_DIR / "usage.json"
-    try:
-        with open(cache_file, "w") as f:
-            json.dump(usage, f, indent=2)
-    except OSError:
-        pass  # Caching is best-effort
+    # Update daily history (only if no error)
+    os.makedirs(CACHE_DIR, mode=0o700, exist_ok=True)
+    if not usage.get("error"):
+        usage["dailyHistory"] = update_daily_history(usage)
+
+    # Cache result (after history is added so cached loads include it)
+    cache_file = os.path.join(CACHE_DIR, "usage.json")
+    _atomic_write_json(cache_file, usage)
 
     # Output to stdout for DataSource
     print(json.dumps(usage))

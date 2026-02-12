@@ -6,13 +6,11 @@ import org.kde.kirigami as Kirigami
 ColumnLayout {
     id: barChart
 
-    UsageColorProvider {
-        id: colorProvider
-    }
+    // Daily usage data from root.dailyHistory (populated by fetch_usage.py)
+    // Each entry: { day: "Mon", date: "2026-02-12", percent: 45.2 }
+    property var dailyData: root.dailyHistory || []
 
-    // Daily usage data — populated from cached snapshots
-    // Each entry: { day: "Mon", percent: 45.2 }
-    property var dailyData: getDailyData()
+    UsageColorProvider { id: colors }
 
     spacing: Kirigami.Units.smallSpacing
 
@@ -58,12 +56,12 @@ ColumnLayout {
                         width: parent.width - 4
                         height: Math.max(2, parent.height * Math.min(modelData.percent, 100) / 100)
                         radius: 2
-                        color: colorProvider.getColorForPercent(modelData.percent)
+                        color: colors.getColorForPercent(modelData.percent)
                         opacity: 0.8
 
                         Behavior on height {
                             NumberAnimation {
-                                duration: 300; easing.type: Easing.OutQuad
+                                duration: Constants.progressAnimationDuration; easing.type: Easing.OutQuad
                             }
                         }
                     }
@@ -106,36 +104,6 @@ ColumnLayout {
                     }
                 }
             }
-        }
-    }
-
-    // Generate daily data from current usage as a simple snapshot view
-    function getDailyData() {
-        // For now, show a single "Today" entry with current session usage
-        // A full implementation would read from cached daily snapshots
-        var today = new Date()
-        var dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-
-        if (root.sessionPercent <= 0 && root.weeklyPercent <= 0) {
-            return []
-        }
-
-        // Show current session as today's data point
-        return [
-            {day: dayNames[today.getDay()], percent: root.sessionPercent > 0 ? root.sessionPercent : root.weeklyPercent}
-        ]
-    }
-
-    // Update when data changes
-    Connections {
-        target: root
-
-        function onSessionPercentChanged() {
-            dailyData = getDailyData()
-        }
-
-        function onWeeklyPercentChanged() {
-            dailyData = getDailyData()
         }
     }
 }

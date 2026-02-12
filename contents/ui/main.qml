@@ -8,11 +8,6 @@ import org.kde.kirigami as Kirigami
 PlasmoidItem {
     id: root
 
-    // Shared constants
-    Constants {
-        id: constants
-    }
-
     // Usage data properties
     property real sessionUsed: 0
     property real weeklyUsed: 0
@@ -34,6 +29,9 @@ PlasmoidItem {
     property real extraUtilization: 0
     property bool hasExtra: false
 
+    // Daily usage history for chart
+    property var dailyHistory: []
+
     hideOnWindowDeactivate: !pinned
 
     // Cache control
@@ -47,7 +45,7 @@ PlasmoidItem {
     property real opusPercent: opusUsed
     property real maxPercent: Math.max(sessionPercent, weeklyPercent, sonnetPercent, opusPercent)
 
-    switchWidth: Kirigami.Units.gridUnit * 12
+    switchWidth: Kirigami.Units.gridUnit * 14
     switchHeight: Kirigami.Units.gridUnit * 12
 
     toolTipMainText: "Claude Usage Tracker"
@@ -92,8 +90,8 @@ PlasmoidItem {
                 if (onError) onError("Parse error")
             }
         } else if (stderr && onError) {
-            var truncatedError = stderr.length > constants.errorMessageMaxLength
-                ? stderr.substring(0, constants.errorMessageMaxLength - 3) + "..."
+            var truncatedError = stderr.length > Constants.errorMessageMaxLength
+                ? stderr.substring(0, Constants.errorMessageMaxLength - 3) + "..."
                 : stderr
             onError(truncatedError)
         } else if (onError) {
@@ -158,8 +156,8 @@ PlasmoidItem {
         isLoading = true
         errorMessage = ""
 
-        var scriptPath = Qt.resolvedUrl("../code/fetch_usage.py").toString().replace("file://", "")
-        executable.exec("python3 " + scriptPath)
+        var scriptPath = Qt.resolvedUrl("../code/fetch_usage.py").toString().replace(/^file:\/\//, "")
+        executable.exec("python3 \"" + scriptPath + "\"")
     }
 
     // Parse API response with validation
@@ -213,6 +211,11 @@ PlasmoidItem {
             subscriptionType = data.subscriptionType
         }
 
+        // Daily history
+        if (data.dailyHistory && Array.isArray(data.dailyHistory)) {
+            dailyHistory = data.dailyHistory
+        }
+
         errorMessage = ""
     }
 
@@ -220,6 +223,15 @@ PlasmoidItem {
     function refresh() {
         lastFetchTime = null
         fetchUsage()
+    }
+
+    // Global tick counter for reset time updates (shared by UsageBar and ModelBreakdownTable)
+    property int resetTimeTick: 0
+    Timer {
+        interval: 30000
+        running: sessionResetsAt !== "" || weeklyResetsAt !== "" || sonnetResetsAt !== "" || opusResetsAt !== ""
+        repeat: true
+        onTriggered: root.resetTimeTick++
     }
 
     // Auto-refresh timer (configurable, 0 = disabled)

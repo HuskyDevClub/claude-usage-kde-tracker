@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import org.kde.plasma.plasmoid
+import org.kde.plasma.components as PlasmaComponents
 import org.kde.kirigami as Kirigami
 
 Item {
@@ -11,17 +12,12 @@ Item {
     Layout.preferredWidth: Kirigami.Units.iconSizes.medium
     Layout.preferredHeight: Kirigami.Units.iconSizes.medium
 
-    // Shared utilities
-    UsageColorProvider {
-        id: colorProvider
-    }
-    Constants {
-        id: constants
-    }
-
     // Show session usage, fall back to weekly if session is 0
     property real percent: root.sessionPercent > 0 ? root.sessionPercent : root.weeklyPercent
-    property color usageColor: colorProvider.getColorForPercent(percent)
+    UsageColorProvider { id: colors }
+
+    property color usageColor: colors.getColorForPercent(percent)
+    property bool hasError: root.errorMessage !== ""
 
     MouseArea {
         anchors.fill: parent
@@ -32,14 +28,14 @@ Item {
         Canvas {
             id: canvas
             anchors.fill: parent
-            anchors.margins: constants.donutCanvasMargin
+            anchors.margins: Constants.donutCanvasMargin
 
             onPaint: {
                 var ctx = getContext("2d")
                 var centerX = width / 2
                 var centerY = height / 2
-                var radius = Math.min(width, height) / 2 - constants.donutCanvasMargin
-                var innerRadius = radius * constants.donutInnerRadiusRatio
+                var radius = Math.min(width, height) / 2 - Constants.donutCanvasMargin
+                var innerRadius = radius * Constants.donutInnerRadiusRatio
 
                 ctx.reset()
 
@@ -49,8 +45,14 @@ Item {
                 ctx.fillStyle = Kirigami.Theme.backgroundColor
                 ctx.fill()
 
-                // Usage arc
-                if (percent > 0) {
+                if (hasError) {
+                    // Full red circle for error state
+                    ctx.beginPath()
+                    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI)
+                    ctx.fillStyle = Qt.alpha(Kirigami.Theme.negativeTextColor, 0.4)
+                    ctx.fill()
+                } else if (percent > 0) {
+                    // Usage arc
                     ctx.beginPath()
                     var startAngle = -Math.PI / 2
                     var endAngle = startAngle + (percent / 100) * 2 * Math.PI
@@ -76,6 +78,10 @@ Item {
                 }
 
                 function onWeeklyPercentChanged() {
+                    canvas.requestPaint()
+                }
+
+                function onErrorMessageChanged() {
                     canvas.requestPaint()
                 }
             }
@@ -104,13 +110,17 @@ Item {
         }
 
         // Percentage text in center
-        Text {
+        PlasmaComponents.Label {
             anchors.centerIn: parent
-            text: root.isLoading ? "..." : (percent < 100 ? Math.round(percent) : "!")
-            color: Kirigami.Theme.textColor
-            font.pixelSize: parent.height * constants.donutTextSizeRatio
+            text: {
+                if (root.isLoading) return "..."
+                if (hasError) return "!"
+                if (percent >= 100) return "!"
+                return Math.round(percent)
+            }
+            color: hasError ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.textColor
+            font.pixelSize: parent.height * Constants.donutTextSizeRatio
             font.bold: true
-            renderType: Text.NativeRendering
         }
 
         // Loading indicator
@@ -127,10 +137,10 @@ Item {
                 running: root.isLoading
                 loops: Animation.Infinite
                 NumberAnimation {
-                    to: 0.2; duration: constants.loadingAnimationDuration
+                    to: 0.2; duration: Constants.loadingAnimationDuration
                 }
                 NumberAnimation {
-                    to: 0.8; duration: constants.loadingAnimationDuration
+                    to: 0.8; duration: Constants.loadingAnimationDuration
                 }
             }
         }

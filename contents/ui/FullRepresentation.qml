@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls as QQC2
 import org.kde.plasma.plasmoid
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.extras as PlasmaExtras
@@ -10,7 +9,7 @@ PlasmaExtras.Representation {
     id: fullRoot
 
     implicitWidth: Kirigami.Units.gridUnit * 22
-    implicitHeight: contentLayout.implicitHeight + Kirigami.Units.largeSpacing * 2
+    implicitHeight: Kirigami.Units.gridUnit * 20
 
     // Usage data model for the main bars
     property var usageModel: [
@@ -82,113 +81,149 @@ PlasmaExtras.Representation {
         }
     }
 
-    ColumnLayout {
-        id: contentLayout
-        anchors {
-            left: parent.left
-            right: parent.right
-            top: parent.top
-            margins: Kirigami.Units.largeSpacing
-        }
-        spacing: Kirigami.Units.mediumSpacing
+    PlasmaComponents.ScrollView {
+        anchors.fill: parent
 
-        // Error message
-        PlasmaExtras.Heading {
-            Layout.fillWidth: true
-            level: 4
-            text: root.errorMessage
-            color: Kirigami.Theme.negativeTextColor
-            wrapMode: Text.WordWrap
-            visible: root.errorMessage !== ""
-            horizontalAlignment: Text.AlignHCenter
-        }
+        contentItem: Flickable {
+            contentHeight: contentLayout.implicitHeight + Kirigami.Units.largeSpacing * 2
+            clip: true
 
-        // Loading indicator
-        Rectangle {
-            Layout.fillWidth: true
-            height: 2
-            color: Kirigami.Theme.highlightColor
-            visible: root.isLoading
-            opacity: 0.5
-        }
+            ColumnLayout {
+                id: contentLayout
+                width: parent.width
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    top: parent.top
+                    leftMargin: Kirigami.Units.largeSpacing
+                    rightMargin: Kirigami.Units.largeSpacing
+                    topMargin: Kirigami.Units.mediumSpacing
+                }
+                spacing: Kirigami.Units.mediumSpacing
 
-        // Main usage bars (Session + Weekly)
-        Repeater {
-            model: usageModel
-
-            UsageBar {
-                Layout.fillWidth: true
-                title: modelData.title
-                percent: modelData.percent
-                resetsAt: modelData.resetsAt
-            }
-        }
-
-        // Separator before model breakdown
-        Kirigami.Separator {
-            Layout.fillWidth: true
-            visible: root.sonnetPercent > 0 || root.opusPercent > 0
-        }
-
-        // Per-model breakdown table
-        ModelBreakdownTable {
-            Layout.fillWidth: true
-            visible: root.sonnetPercent > 0 || root.opusPercent > 0
-            sonnetPercent: root.sonnetPercent
-            sonnetResetsAt: root.sonnetResetsAt
-            opusPercent: root.opusPercent
-            opusResetsAt: root.opusResetsAt
-        }
-
-        // Extra usage section (paid overage)
-        ColumnLayout {
-            Layout.fillWidth: true
-            visible: root.hasExtra && Plasmoid.configuration.showExtraUsage
-            spacing: Kirigami.Units.smallSpacing
-
-            Kirigami.Separator {
-                Layout.fillWidth: true
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Kirigami.Units.smallSpacing
-
-                PlasmaComponents.Label {
-                    text: "Extra Usage"
+                // Error message
+                PlasmaExtras.Heading {
                     Layout.fillWidth: true
-                    font.weight: Font.Medium
+                    level: 4
+                    text: root.errorMessage
+                    color: Kirigami.Theme.negativeTextColor
+                    wrapMode: Text.WordWrap
+                    visible: root.errorMessage !== ""
+                    horizontalAlignment: Text.AlignHCenter
                 }
 
+                // Loading indicator
+                PlasmaComponents.BusyIndicator {
+                    Layout.alignment: Qt.AlignHCenter
+                    visible: root.isLoading
+                    running: root.isLoading
+                }
+
+                // Main usage bars (Session + Weekly)
+                Repeater {
+                    model: usageModel
+
+                    UsageBar {
+                        Layout.fillWidth: true
+                        title: modelData.title
+                        percent: modelData.percent
+                        resetsAt: modelData.resetsAt
+                    }
+                }
+
+                // Separator before model breakdown
+                Kirigami.Separator {
+                    Layout.fillWidth: true
+                    visible: root.sonnetPercent > 0 || root.opusPercent > 0
+                }
+
+                // Per-model breakdown table
+                ModelBreakdownTable {
+                    Layout.fillWidth: true
+                    visible: root.sonnetPercent > 0 || root.opusPercent > 0
+                    sonnetPercent: root.sonnetPercent
+                    sonnetResetsAt: root.sonnetResetsAt
+                    opusPercent: root.opusPercent
+                    opusResetsAt: root.opusResetsAt
+                }
+
+                // Extra usage section (paid overage)
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    visible: root.hasExtra && Plasmoid.configuration.showExtraUsage
+                    spacing: Kirigami.Units.smallSpacing
+
+                    UsageColorProvider { id: extraColors }
+
+                    Kirigami.Separator {
+                        Layout.fillWidth: true
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Kirigami.Units.smallSpacing
+
+                        PlasmaComponents.Label {
+                            text: "Extra Usage"
+                            Layout.fillWidth: true
+                            font.weight: Font.Medium
+                        }
+
+                        PlasmaComponents.Label {
+                            text: "$" + root.extraUsed.toFixed(2) + " / $" + root.extraLimit.toFixed(2)
+                            font: Kirigami.Theme.smallFont
+                            opacity: 0.8
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 3
+                        radius: height / 2
+                        color: Qt.alpha(Kirigami.Theme.textColor, 0.1)
+
+                        Rectangle {
+                            anchors {
+                                left: parent.left
+                                top: parent.top
+                                bottom: parent.bottom
+                            }
+                            width: parent.width * Math.min(root.extraUtilization, 100) / 100
+                            radius: parent.radius
+                            color: extraColors.getColorForPercent(root.extraUtilization)
+
+                            Behavior on width {
+                                NumberAnimation {
+                                    duration: Constants.progressAnimationDuration; easing.type: Easing.OutQuad
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Separator before chart
+                Kirigami.Separator {
+                    Layout.fillWidth: true
+                    visible: Plasmoid.configuration.showRecentUsage
+                }
+
+                // Daily usage chart
+                UsageBarChart {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Kirigami.Units.gridUnit * 5
+                    visible: Plasmoid.configuration.showRecentUsage
+                }
+
+                // Last updated
                 PlasmaComponents.Label {
-                    text: "$" + root.extraUsed.toFixed(2) + " / $" + root.extraLimit.toFixed(2)
+                    Layout.fillWidth: true
+                    Layout.topMargin: Kirigami.Units.smallSpacing
+                    horizontalAlignment: Text.AlignHCenter
+                    text: root.lastUpdated ? "Updated: " + root.lastUpdated : "Not yet updated"
+                    opacity: 0.6
                     font: Kirigami.Theme.smallFont
-                    opacity: 0.8
                 }
             }
-        }
-
-        // Separator before chart
-        Kirigami.Separator {
-            Layout.fillWidth: true
-            visible: Plasmoid.configuration.showRecentUsage
-        }
-
-        // Daily usage chart
-        UsageBarChart {
-            Layout.fillWidth: true
-            Layout.preferredHeight: Kirigami.Units.gridUnit * 5
-            visible: Plasmoid.configuration.showRecentUsage
-        }
-
-        // Last updated
-        PlasmaComponents.Label {
-            Layout.fillWidth: true
-            Layout.topMargin: Kirigami.Units.smallSpacing
-            horizontalAlignment: Text.AlignHCenter
-            text: root.lastUpdated ? "Updated: " + root.lastUpdated : "Not yet updated"
-            opacity: 0.6
-            font: Kirigami.Theme.smallFont
         }
     }
 }

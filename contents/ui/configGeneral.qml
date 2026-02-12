@@ -10,7 +10,7 @@ KCM.SimpleKCM {
     property alias cfg_autoRefreshMinutes: autoRefreshSpinBox.value
     property int cfg_autoRefreshMinutesDefault: 10
     property alias cfg_showExtraUsage: showExtraUsageCheckBox.checked
-    property bool cfg_showExtraUsageDefault: false
+    property bool cfg_showExtraUsageDefault: true
     property alias cfg_showRecentUsage: showRecentUsageCheckBox.checked
     property bool cfg_showRecentUsageDefault: false
 
@@ -18,7 +18,7 @@ KCM.SimpleKCM {
         QQC2.SpinBox {
             id: refreshSpinBox
             Kirigami.FormData.label: i18nc("@label:spinbox", "Cache duration (seconds):")
-            30
+            from: 30
             to: 600
             stepSize: 30
         }
@@ -48,7 +48,7 @@ KCM.SimpleKCM {
         QQC2.SpinBox {
             id: autoRefreshSpinBox
             Kirigami.FormData.label: i18nc("@label:spinbox", "Auto-refresh (minutes, 0 = off):")
-            0
+            from: 0
             to: 60
             stepSize: 1
         }
@@ -58,10 +58,6 @@ KCM.SimpleKCM {
                 ? i18nc("@info", "Disabled")
                 : i18ncp("@info", "Every %1 minute", "Every %1 minutes", autoRefreshSpinBox.value)
             opacity: 0.7
-        }
-
-        Kirigami.Separator {
-            Kirigami.FormData.isSection: true
         }
 
         Kirigami.Separator {

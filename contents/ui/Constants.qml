@@ -1,3 +1,4 @@
+pragma Singleton
 import QtQuick
 
 QtObject {
@@ -18,8 +19,4 @@ QtObject {
     // Animation durations
     readonly property int progressAnimationDuration: 300
     readonly property int loadingAnimationDuration: 500
-
-    // Day difference constants for time formatting
-    readonly property int dayToday: 0
-    readonly property int dayTomorrow: 1
 }
