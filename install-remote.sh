@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-REPO="https://github.com/yudonglin/claude-usage-kde-tracker.git"
+REPO="https://github.com/HuskyDevClub/claude-usage-kde-tracker.git"
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
 
