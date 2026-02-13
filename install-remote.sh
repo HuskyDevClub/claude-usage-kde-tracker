@@ -1,12 +1,21 @@
 #!/bin/bash
 set -e
 
-REPO="https://github.com/HuskyDevClub/claude-usage-kde-tracker.git"
+REPO="HuskyDevClub/claude-usage-kde-tracker"
+BRANCH="main"
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
 
 echo "Downloading Claude Usage Tracker..."
-git clone --depth 1 "$REPO" "$TMPDIR"
+
+if command -v curl &>/dev/null; then
+    curl -sL "https://github.com/$REPO/archive/refs/heads/$BRANCH.tar.gz" | tar xz -C "$TMPDIR" --strip-components=1
+elif command -v wget &>/dev/null; then
+    wget -qO- "https://github.com/$REPO/archive/refs/heads/$BRANCH.tar.gz" | tar xz -C "$TMPDIR" --strip-components=1
+else
+    echo "Error: curl or wget is required" >&2
+    exit 1
+fi
 
 cd "$TMPDIR"
 ./install.sh

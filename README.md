@@ -21,6 +21,8 @@ A KDE Plasma 6 widget that displays your Claude AI usage limits and quotas direc
 
 ## Installation
 
+Just copy and paste this single line into your terminal:
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/HuskyDevClub/claude-usage-kde-tracker/main/install-remote.sh | bash
 ```
