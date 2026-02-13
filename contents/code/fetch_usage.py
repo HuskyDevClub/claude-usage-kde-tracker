@@ -222,12 +222,12 @@ def fetch_usage() -> dict[str, Any]:
         result["sonnet"] = parse_usage_item(data, "seven_day_sonnet")
         result["opus"] = parse_usage_item(data, "seven_day_opus")
 
-        # Extra usage (paid overage)
+        # Extra usage (paid overage) — API returns credits in cents
         extra = data.get("extra_usage")
         if extra and isinstance(extra, dict) and extra.get("is_enabled"):
             result["extra"] = {
-                "used": extra.get("used_credits", 0),
-                "limit": extra.get("monthly_limit", 0),
+                "used": extra.get("used_credits", 0) / 100,
+                "limit": extra.get("monthly_limit", 0) / 100,
                 "utilization": extra.get("utilization", 0),
             }
 
