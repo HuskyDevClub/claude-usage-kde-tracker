@@ -5,16 +5,10 @@
                           http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
     <kcfgfile name=""/>
     <group name="General">
-        <entry name="refreshInterval" type="Int">
-            <label>Cache duration in seconds before fetching new data</label>
-            <default>60</default>
-            <min>30</min>
-            <max>600</max>
-        </entry>
-        <entry name="autoRefreshMinutes" type="Int">
-            <label>Auto-refresh interval in minutes (0 = disabled)</label>
-            <default>10</default>
-            <min>0</min>
+        <entry name="refreshIntervalMinutes" type="Int">
+            <label>Refresh interval in minutes</label>
+            <default>1</default>
+            <min>1</min>
             <max>60</max>
         </entry>
         <entry name="showExtraUsage" type="Bool">

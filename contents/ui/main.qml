@@ -34,9 +34,9 @@ PlasmoidItem {
 
     hideOnWindowDeactivate: !pinned
 
-    // Cache control
+    // Refresh control
     property var lastFetchTime: null
-    property int cacheMinutes: Math.max(1, Plasmoid.configuration.refreshInterval / 60)
+    property int refreshMinutes: Math.max(1, Plasmoid.configuration.refreshIntervalMinutes)
 
     // Computed percentages
     property real sessionPercent: sessionUsed
@@ -68,12 +68,11 @@ PlasmoidItem {
         }
     }
 
-    // Check if cache is stale
     function isCacheStale() {
         if (!lastFetchTime) return true
         var now = new Date()
         var diffMinutes = (now - lastFetchTime) / (1000 * 60)
-        return diffMinutes >= cacheMinutes
+        return diffMinutes >= refreshMinutes
     }
 
     // Helper function to handle command output
@@ -234,11 +233,11 @@ PlasmoidItem {
         onTriggered: root.resetTimeTick++
     }
 
-    // Auto-refresh timer (configurable, 0 = disabled)
+    // Auto-refresh timer
     Timer {
         id: refreshTimer
-        interval: Math.max(60000, Plasmoid.configuration.autoRefreshMinutes * 60 * 1000)
-        running: Plasmoid.configuration.autoRefreshMinutes > 0
+        interval: refreshMinutes * 60 * 1000
+        running: true
         repeat: true
         onTriggered: fetchUsage()
     }

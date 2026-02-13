@@ -5,10 +5,8 @@ import org.kde.kirigami as Kirigami
 import org.kde.kcmutils as KCM
 
 KCM.SimpleKCM {
-    property alias cfg_refreshInterval: refreshSpinBox.value
-    property int cfg_refreshIntervalDefault: 60
-    property alias cfg_autoRefreshMinutes: autoRefreshSpinBox.value
-    property int cfg_autoRefreshMinutesDefault: 10
+    property alias cfg_refreshIntervalMinutes: refreshSpinBox.value
+    property int cfg_refreshIntervalMinutesDefault: 1
     property alias cfg_showExtraUsage: showExtraUsageCheckBox.checked
     property bool cfg_showExtraUsageDefault: true
     property alias cfg_showRecentUsage: showRecentUsageCheckBox.checked
@@ -17,46 +15,14 @@ KCM.SimpleKCM {
     Kirigami.FormLayout {
         QQC2.SpinBox {
             id: refreshSpinBox
-            Kirigami.FormData.label: i18nc("@label:spinbox", "Cache duration (seconds):")
-            from: 30
-            to: 600
-            stepSize: 30
-        }
-
-        QQC2.Label {
-            text: {
-                var seconds = refreshSpinBox.value
-                if (seconds < 60) {
-                    return i18ncp("@info", "%1 second", "%1 seconds", seconds)
-                } else {
-                    var minutes = Math.floor(seconds / 60)
-                    var remainder = seconds % 60
-                    if (remainder === 0) {
-                        return i18ncp("@info", "%1 minute", "%1 minutes", minutes)
-                    }
-                    return i18ncp("@info", "%1 minute", "%1 minutes", minutes) + " " +
-                        i18ncp("@info", "%1 second", "%1 seconds", remainder)
-                }
-            }
-            opacity: 0.7
-        }
-
-        Kirigami.Separator {
-            Kirigami.FormData.isSection: true
-        }
-
-        QQC2.SpinBox {
-            id: autoRefreshSpinBox
-            Kirigami.FormData.label: i18nc("@label:spinbox", "Auto-refresh (minutes, 0 = off):")
-            from: 0
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Refresh interval (minutes):")
+            from: 1
             to: 60
             stepSize: 1
         }
 
         QQC2.Label {
-            text: autoRefreshSpinBox.value === 0
-                ? i18nc("@info", "Disabled")
-                : i18ncp("@info", "Every %1 minute", "Every %1 minutes", autoRefreshSpinBox.value)
+            text: i18ncp("@info", "Every %1 minute", "Every %1 minutes", refreshSpinBox.value)
             opacity: 0.7
         }
 
