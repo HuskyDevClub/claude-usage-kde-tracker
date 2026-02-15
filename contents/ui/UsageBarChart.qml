@@ -68,8 +68,12 @@ ColumnLayout {
 
                     // Percentage label on top of bar
                     PlasmaComponents.Label {
+                        id: percentLabel
                         anchors.bottom: parent.bottom
-                        anchors.bottomMargin: Math.max(2, parent.height * Math.min(modelData.percent, 100) / 100) + 2
+                        anchors.bottomMargin: Math.min(
+                            Math.max(2, parent.height * Math.min(modelData.percent, 100) / 100) + 2,
+                            parent.height - implicitHeight
+                        )
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: Math.round(modelData.percent) + "%"
                         font.pixelSize: Kirigami.Theme.smallFont.pixelSize * 0.9

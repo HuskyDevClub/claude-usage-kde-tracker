@@ -69,6 +69,7 @@ PlasmaExtras.Representation {
             }
 
             PlasmaComponents.ToolButton {
+                visible: root.compactRepresentationItem !== null
                 icon.name: "window-pin"
                 onClicked: root.pinned = !root.pinned
                 checkable: true
