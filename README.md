@@ -2,6 +2,10 @@
 
 A KDE Plasma 6 widget that displays your Claude AI usage limits and quotas directly in your panel.
 
+## Preview
+
+![Preview](screenshots/preview.png)
+
 ## Features
 
 - **Panel donut chart** showing current session utilization at a glance
@@ -34,7 +38,7 @@ To upgrade, run the same command again.
 ## Uninstallation
 
 ```bash
-./uninstall.sh
+curl -fsSL https://raw.githubusercontent.com/HuskyDevClub/claude-usage-kde-tracker/main/uninstall.sh | bash
 ```
 
 ## Configuration

@@ -13,6 +13,12 @@ else
     kpackagetool6 --type Plasma/Applet --install "$WIDGET_DIR"
 fi
 
+# Install icon to system icon theme so the widget explorer can find it
+ICON_DIR="$HOME/.local/share/icons/hicolor"
+mkdir -p "$ICON_DIR/256x256/apps"
+cp "$WIDGET_DIR/screenshots/preview.png" "$ICON_DIR/256x256/apps/claude.png"
+gtk-update-icon-cache "$ICON_DIR" 2>/dev/null || true
+
 # Clear QML cache so Plasma picks up the new files
 rm -rf ~/.cache/plasmashell/qmlcache
 
