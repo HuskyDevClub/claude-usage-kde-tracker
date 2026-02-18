@@ -6,6 +6,7 @@
                 "Name": "Wynter Lin"
             }
         ],
+        "BugReportUrl": "https://github.com/HuskyDevClub/claude-usage-kde-tracker/issues",
         "Category": "Utilities",
         "Description": "Track your Claude AI usage limits and quotas",
         "FormFactors": [
