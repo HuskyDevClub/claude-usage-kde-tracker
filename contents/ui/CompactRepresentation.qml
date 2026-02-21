@@ -55,7 +55,7 @@ Item {
                     // Usage arc
                     ctx.beginPath()
                     var startAngle = -Math.PI / 2
-                    var endAngle = startAngle + (percent / 100) * 2 * Math.PI
+                    var endAngle = startAngle + (Math.min(percent, 100) / 100) * 2 * Math.PI
                     ctx.moveTo(centerX, centerY)
                     ctx.arc(centerX, centerY, radius, startAngle, endAngle)
                     ctx.closePath()

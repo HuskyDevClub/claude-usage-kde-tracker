@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import tempfile
 from datetime import datetime
 from typing import Any
@@ -7,8 +8,6 @@ from typing import Any
 try:
     import requests
 except ImportError:
-    import sys
-
     print(
         json.dumps(
             {
@@ -27,10 +26,13 @@ CACHE_DIR = os.path.join(
 )
 
 
-def _atomic_write_json(filepath: str, data: Any, mode: int = 0o600) -> None:
+def _atomic_write_json(filepath: str, data: Any, mode: int = 0o600) -> bool:
     """Write JSON to a file atomically using write-to-temp-then-rename.
 
     Prevents data corruption if the process is interrupted mid-write.
+
+    Returns:
+        True on success, False on failure.
     """
     dir_path = os.path.dirname(filepath)
     fd, tmp_path = tempfile.mkstemp(dir=dir_path, suffix=".tmp")
@@ -39,11 +41,13 @@ def _atomic_write_json(filepath: str, data: Any, mode: int = 0o600) -> None:
             json.dump(data, f, indent=2)
         os.chmod(tmp_path, mode)
         os.rename(tmp_path, filepath)
+        return True
     except OSError:
         try:
             os.unlink(tmp_path)
         except OSError:
             pass
+        return False
 
 
 def _is_token_expired(oauth_data: dict) -> bool:
@@ -272,11 +276,14 @@ def update_daily_history(usage: dict[str, Any]) -> list[dict[str, Any]]:
 
     # Prune entries older than 7 days
     cutoff = datetime.now().timestamp() - 7 * 86400
-    history = {
-        date: data
-        for date, data in history.items()
-        if datetime.strptime(date, "%Y-%m-%d").timestamp() >= cutoff
-    }
+    pruned: dict[str, dict[str, Any]] = {}
+    for date, data in history.items():
+        try:
+            if datetime.strptime(date, "%Y-%m-%d").timestamp() >= cutoff:
+                pruned[date] = data
+        except ValueError:
+            pass  # Skip corrupted date entries
+    history = pruned
 
     _atomic_write_json(history_file, history)
 
@@ -308,7 +315,8 @@ def main() -> None:
 
     # Cache result (after history is added so cached loads include it)
     cache_file = os.path.join(CACHE_DIR, "usage.json")
-    _atomic_write_json(cache_file, usage)
+    if not _atomic_write_json(cache_file, usage):
+        print("Warning: failed to write cache file", file=sys.stderr)
 
     # Output to stdout for DataSource
     print(json.dumps(usage))
