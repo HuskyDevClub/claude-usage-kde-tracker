@@ -37,6 +37,8 @@ PlasmoidItem {
     // Refresh control
     property var lastFetchTime: null
     property int refreshMinutes: Math.max(1, Plasmoid.configuration.refreshIntervalMinutes)
+    property int backoffMultiplier: 1
+    property int maxBackoffMultiplier: 8
 
     // Computed percentages
     property real sessionPercent: sessionUsed
@@ -164,6 +166,19 @@ PlasmoidItem {
         if (!data || typeof data !== "object") {
             errorMessage = "Invalid response format"
             return
+        }
+
+        // Handle rate limiting with exponential backoff
+        if (data.rateLimited) {
+            backoffMultiplier = Math.min(backoffMultiplier * 2, maxBackoffMultiplier)
+            refreshTimer.interval = refreshMinutes * 60 * 1000 * backoffMultiplier
+            // Continue parsing cached data below (rateLimited responses carry cached data)
+        } else {
+            // Successful fetch — reset backoff
+            if (backoffMultiplier > 1) {
+                backoffMultiplier = 1
+                refreshTimer.interval = refreshMinutes * 60 * 1000
+            }
         }
 
         if (data.error) {

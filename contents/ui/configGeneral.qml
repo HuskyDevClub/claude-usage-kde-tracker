@@ -6,7 +6,7 @@ import org.kde.kcmutils as KCM
 
 KCM.SimpleKCM {
     property alias cfg_refreshIntervalMinutes: refreshSpinBox.value
-    property int cfg_refreshIntervalMinutesDefault: 1
+    property int cfg_refreshIntervalMinutesDefault: 5
     property alias cfg_showExtraUsage: showExtraUsageCheckBox.checked
     property bool cfg_showExtraUsageDefault: true
     property alias cfg_showRecentUsage: showRecentUsageCheckBox.checked

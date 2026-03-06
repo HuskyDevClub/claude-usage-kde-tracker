@@ -215,6 +215,10 @@ def fetch_usage() -> dict[str, Any]:
         if response.status_code == 403:
             result["error"] = "Access denied. Check your subscription."
             return result
+        if response.status_code == 429:
+            result["rateLimited"] = True
+            result["error"] = "Rate limited — using cached data"
+            return result
         if response.status_code != 200:
             result["error"] = f"API error: {response.status_code}"
             return result
@@ -308,13 +312,30 @@ def update_daily_history(usage: dict[str, Any]) -> list[dict[str, Any]]:
 def main() -> None:
     usage = fetch_usage()
 
-    # Update daily history (only if no error)
     os.makedirs(CACHE_DIR, mode=0o700, exist_ok=True)
+    cache_file = os.path.join(CACHE_DIR, "usage.json")
+
+    # On rate limit, serve cached data with rateLimited flag
+    if usage.get("rateLimited"):
+        try:
+            if os.path.exists(cache_file):
+                with open(cache_file, "r") as f:
+                    cached = json.load(f)
+                cached["rateLimited"] = True
+                cached["error"] = None
+                print(json.dumps(cached))
+                return
+        except (json.JSONDecodeError, OSError):
+            pass
+        # No usable cache — fall through and output the error result
+        print(json.dumps(usage))
+        return
+
+    # Update daily history (only if no error)
     if not usage.get("error"):
         usage["dailyHistory"] = update_daily_history(usage)
 
     # Cache result (after history is added so cached loads include it)
-    cache_file = os.path.join(CACHE_DIR, "usage.json")
     if not _atomic_write_json(cache_file, usage):
         print("Warning: failed to write cache file", file=sys.stderr)
 
