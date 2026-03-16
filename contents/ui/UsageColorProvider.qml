@@ -5,12 +5,9 @@ Item {
     id: colorProvider
     visible: false
 
-    property int criticalThreshold: 90
-    property int warningThreshold: 75
-
     function getColorForPercent(percent) {
-        if (percent >= criticalThreshold) return Kirigami.Theme.negativeTextColor
-        if (percent >= warningThreshold) return Kirigami.Theme.neutralTextColor
+        if (percent >= Constants.usageCriticalThreshold) return Kirigami.Theme.negativeTextColor
+        if (percent >= Constants.usageWarningThreshold) return Kirigami.Theme.neutralTextColor
         return Kirigami.Theme.positiveTextColor
     }
 }

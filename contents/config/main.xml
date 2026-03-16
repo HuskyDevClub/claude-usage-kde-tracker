@@ -7,7 +7,7 @@
     <group name="General">
         <entry name="refreshIntervalMinutes" type="Int">
             <label>Refresh interval in minutes</label>
-            <default>1</default>
+            <default>5</default>
             <min>1</min>
             <max>60</max>
         </entry>

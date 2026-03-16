@@ -74,7 +74,7 @@ PlasmoidItem {
         if (!lastFetchTime) return true
         var now = new Date()
         var diffMinutes = (now - lastFetchTime) / (1000 * 60)
-        return diffMinutes >= refreshMinutes
+        return diffMinutes >= (refreshMinutes * backoffMultiplier)
     }
 
     // Helper function to handle command output
@@ -114,7 +114,8 @@ PlasmoidItem {
                     function (result) {
                     parseUsageData(result)
                     lastFetchTime = new Date()
-                    lastUpdated = lastFetchTime.toLocaleTimeString(Qt.locale(), "HH:mm:ss")
+                    var timeStr = lastFetchTime.toLocaleTimeString(Qt.locale(), "HH:mm:ss")
+                    lastUpdated = result.rateLimited ? timeStr + " (cached)" : timeStr
                 },
                     function (error) {
                     errorMessage = error
@@ -143,6 +144,9 @@ PlasmoidItem {
                 },
                 null  // Silently ignore cache errors
             )
+
+            // Fetch fresh data after cache is loaded (avoids race condition)
+            fetchUsage()
         }
 
         function loadCache() {
@@ -155,9 +159,8 @@ PlasmoidItem {
         if (isLoading) return
 
         isLoading = true
-        errorMessage = ""
 
-        var scriptPath = Qt.resolvedUrl("../code/fetch_usage.py").toString().replace(/^file:\/\//, "")
+        var scriptPath = decodeURIComponent(Qt.resolvedUrl("../code/fetch_usage.py").toString().replace(/^file:\/\//, ""))
         executable.exec("python3 \"" + scriptPath + "\"")
     }
 
@@ -171,14 +174,10 @@ PlasmoidItem {
         // Handle rate limiting with exponential backoff
         if (data.rateLimited) {
             backoffMultiplier = Math.min(backoffMultiplier * 2, maxBackoffMultiplier)
-            refreshTimer.interval = refreshMinutes * 60 * 1000 * backoffMultiplier
             // Continue parsing cached data below (rateLimited responses carry cached data)
         } else {
             // Successful fetch — reset backoff
-            if (backoffMultiplier > 1) {
-                backoffMultiplier = 1
-                refreshTimer.interval = refreshMinutes * 60 * 1000
-            }
+            backoffMultiplier = 1
         }
 
         if (data.error) {
@@ -251,15 +250,14 @@ PlasmoidItem {
     // Auto-refresh timer
     Timer {
         id: refreshTimer
-        interval: refreshMinutes * 60 * 1000
+        interval: refreshMinutes * 60 * 1000 * backoffMultiplier
         running: true
         repeat: true
         onTriggered: fetchUsage()
     }
 
-    // Initial load: first show cached data, then fetch fresh data
+    // Initial load: show cached data first, then fetch fresh data (triggered by cacheLoader.onNewData)
     Component.onCompleted: {
         cacheLoader.loadCache()
-        fetchUsage()
     }
 }

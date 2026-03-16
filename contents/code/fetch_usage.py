@@ -15,7 +15,7 @@ except ImportError:
             }
         )
     )
-    sys.exit(1)
+    sys.exit(0)
 
 OAUTH_USAGE_URL = "https://api.anthropic.com/api/oauth/usage"
 OAUTH_TOKEN_URL = "https://console.anthropic.com/v1/oauth/token"
@@ -335,9 +335,9 @@ def main() -> None:
     if not usage.get("error"):
         usage["dailyHistory"] = update_daily_history(usage)
 
-    # Cache result (after history is added so cached loads include it)
-    if not _atomic_write_json(cache_file, usage):
-        print("Warning: failed to write cache file", file=sys.stderr)
+        # Cache result (after history is added so cached loads include it)
+        if not _atomic_write_json(cache_file, usage):
+            print("Warning: failed to write cache file", file=sys.stderr)
 
     # Output to stdout for DataSource
     print(json.dumps(usage))

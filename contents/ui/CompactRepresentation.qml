@@ -34,40 +34,36 @@ Item {
                 var ctx = getContext("2d")
                 var centerX = width / 2
                 var centerY = height / 2
-                var radius = Math.min(width, height) / 2 - Constants.donutCanvasMargin
+                var radius = Math.min(width, height) / 2
                 var innerRadius = radius * Constants.donutInnerRadiusRatio
+                var lineWidth = radius - innerRadius
+                var arcRadius = (radius + innerRadius) / 2
 
                 ctx.reset()
+                ctx.lineCap = "butt"
+                ctx.lineWidth = lineWidth
 
-                // Background circle
+                // Background track ring
                 ctx.beginPath()
-                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI)
-                ctx.fillStyle = Kirigami.Theme.backgroundColor
-                ctx.fill()
+                ctx.arc(centerX, centerY, arcRadius, 0, 2 * Math.PI)
+                ctx.strokeStyle = Qt.alpha(Kirigami.Theme.textColor, 0.15)
+                ctx.stroke()
 
                 if (hasError) {
-                    // Full red circle for error state
+                    // Full red ring for error state
                     ctx.beginPath()
-                    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI)
-                    ctx.fillStyle = Qt.alpha(Kirigami.Theme.negativeTextColor, 0.4)
-                    ctx.fill()
+                    ctx.arc(centerX, centerY, arcRadius, 0, 2 * Math.PI)
+                    ctx.strokeStyle = Qt.alpha(Kirigami.Theme.negativeTextColor, 0.4)
+                    ctx.stroke()
                 } else if (percent > 0) {
                     // Usage arc
                     ctx.beginPath()
                     var startAngle = -Math.PI / 2
                     var endAngle = startAngle + (Math.min(percent, 100) / 100) * 2 * Math.PI
-                    ctx.moveTo(centerX, centerY)
-                    ctx.arc(centerX, centerY, radius, startAngle, endAngle)
-                    ctx.closePath()
-                    ctx.fillStyle = usageColor
-                    ctx.fill()
+                    ctx.arc(centerX, centerY, arcRadius, startAngle, endAngle)
+                    ctx.strokeStyle = usageColor
+                    ctx.stroke()
                 }
-
-                // Inner circle (donut hole)
-                ctx.beginPath()
-                ctx.arc(centerX, centerY, innerRadius, 0, 2 * Math.PI)
-                ctx.fillStyle = Kirigami.Theme.backgroundColor
-                ctx.fill()
             }
 
             Connections {
@@ -89,11 +85,11 @@ Item {
             Connections {
                 target: Kirigami.Theme
 
-                function onHighlightColorChanged() {
+                function onTextColorChanged() {
                     canvas.requestPaint()
                 }
 
-                function onBackgroundColorChanged() {
+                function onPositiveTextColorChanged() {
                     canvas.requestPaint()
                 }
 
