@@ -157,7 +157,9 @@ PlasmaExtras.Representation {
                     visible: root.hasExtra && Plasmoid.configuration.showExtraUsage
                     spacing: Kirigami.Units.smallSpacing
 
-                    UsageColorProvider { id: extraColors }
+                    UsageColorProvider {
+                        id: extraColors
+                    }
 
                     Kirigami.Separator {
                         Layout.fillWidth: true
@@ -194,7 +196,9 @@ PlasmaExtras.Representation {
                             }
                             width: parent.width * Math.min(root.extraUtilization, 100) / 100
                             radius: parent.radius
-                            color: extraColors.getColorForPercent(root.extraUtilization)
+                            color: root.extraUtilization >= Constants.usageCriticalThreshold ? extraColors.criticalColor
+                                : root.extraUtilization >= Constants.usageWarningThreshold ? extraColors.warningColor
+                                    : extraColors.normalColor
 
                             Behavior on width {
                                 NumberAnimation {

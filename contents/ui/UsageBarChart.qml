@@ -10,7 +10,9 @@ ColumnLayout {
     // Each entry: { day: "Mon", date: "2026-02-12", percent: 45.2 }
     property var dailyData: root.dailyHistory || []
 
-    UsageColorProvider { id: colors }
+    UsageColorProvider {
+        id: colors
+    }
 
     spacing: Kirigami.Units.smallSpacing
 
@@ -56,7 +58,9 @@ ColumnLayout {
                         width: parent.width - 4
                         height: Math.max(2, parent.height * Math.min(modelData.percent, 100) / 100)
                         radius: 2
-                        color: colors.getColorForPercent(modelData.percent)
+                        color: modelData.percent >= Constants.usageCriticalThreshold ? colors.criticalColor
+                            : modelData.percent >= Constants.usageWarningThreshold ? colors.warningColor
+                                : colors.normalColor
                         opacity: 0.8
 
                         Behavior on height {

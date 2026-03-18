@@ -19,5 +19,21 @@
             <label>Show daily usage chart</label>
             <default>false</default>
         </entry>
+        <entry name="useCustomColors" type="Bool">
+            <label>Use custom colors instead of theme colors</label>
+            <default>false</default>
+        </entry>
+        <entry name="normalColor" type="String">
+            <label>Color for normal usage level</label>
+            <default>#27ae60</default>
+        </entry>
+        <entry name="warningColor" type="String">
+            <label>Color for warning usage level</label>
+            <default>#f39c12</default>
+        </entry>
+        <entry name="criticalColor" type="String">
+            <label>Color for critical usage level</label>
+            <default>#e74c3c</default>
+        </entry>
     </group>
 </kcfg>

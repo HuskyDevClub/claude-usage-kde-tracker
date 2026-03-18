@@ -11,7 +11,9 @@ ColumnLayout {
     property string resetsAt: ""
     property int tick: 0
 
-    UsageColorProvider { id: colors }
+    UsageColorProvider {
+        id: colors
+    }
 
     Layout.fillWidth: true
     visible: percent > 0
@@ -30,7 +32,9 @@ ColumnLayout {
             text: percent.toFixed(1) + "%"
             Layout.preferredWidth: Kirigami.Units.gridUnit * 5
             horizontalAlignment: Text.AlignRight
-            color: colors.getColorForPercent(percent)
+            color: percent >= Constants.usageCriticalThreshold ? colors.criticalColor
+                : percent >= Constants.usageWarningThreshold ? colors.warningColor
+                    : colors.normalColor
             font.bold: true
         }
     }
@@ -50,7 +54,9 @@ ColumnLayout {
             }
             width: parent.width * Math.min(percent, 100) / 100
             radius: parent.radius
-            color: colors.getColorForPercent(percent)
+            color: percent >= Constants.usageCriticalThreshold ? colors.criticalColor
+                : percent >= Constants.usageWarningThreshold ? colors.warningColor
+                    : colors.normalColor
 
             Behavior on width {
                 NumberAnimation {

@@ -10,9 +10,13 @@ ColumnLayout {
     property real percent: 0
     property string resetsAt: ""
 
-    UsageColorProvider { id: colors }
+    UsageColorProvider {
+        id: colors
+    }
 
-    property color barColor: colors.getColorForPercent(percent)
+    property color barColor: percent >= Constants.usageCriticalThreshold ? colors.criticalColor
+        : percent >= Constants.usageWarningThreshold ? colors.warningColor
+            : colors.normalColor
 
     spacing: Kirigami.Units.smallSpacing
 

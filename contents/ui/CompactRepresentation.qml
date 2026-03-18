@@ -17,9 +17,14 @@ Item {
 
     // Show session usage, fall back to weekly if session is 0
     property real percent: root.sessionPercent > 0 ? root.sessionPercent : root.weeklyPercent
-    UsageColorProvider { id: colors }
+    UsageColorProvider {
+        id: colors
+    }
 
-    property color usageColor: colors.getColorForPercent(percent)
+    property color usageColor: percent >= Constants.usageCriticalThreshold ? colors.criticalColor
+        : percent >= Constants.usageWarningThreshold ? colors.warningColor
+            : colors.normalColor
+    onUsageColorChanged: canvas.requestPaint()
     property bool hasError: root.errorMessage !== ""
 
     MouseArea {
