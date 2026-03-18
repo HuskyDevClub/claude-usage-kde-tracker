@@ -7,6 +7,9 @@ import org.kde.kirigami as Kirigami
 Item {
     id: compactRoot
 
+    Kirigami.Theme.colorSet: Kirigami.Theme.Header
+    Kirigami.Theme.inherit: false
+
     Layout.minimumWidth: Kirigami.Units.iconSizes.small
     Layout.minimumHeight: Kirigami.Units.iconSizes.small
     Layout.preferredWidth: Kirigami.Units.iconSizes.medium

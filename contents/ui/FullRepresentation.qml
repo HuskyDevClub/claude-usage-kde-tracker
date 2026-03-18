@@ -8,6 +8,9 @@ import org.kde.kirigami as Kirigami
 PlasmaExtras.Representation {
     id: fullRoot
 
+    Kirigami.Theme.colorSet: Kirigami.Theme.View
+    Kirigami.Theme.inherit: false
+
     implicitWidth: Kirigami.Units.gridUnit * 22
     implicitHeight: Kirigami.Units.gridUnit * 20
 
