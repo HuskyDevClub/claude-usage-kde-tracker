@@ -34,6 +34,11 @@ QtObject {
         var hours = Math.floor(diffMins / 60)
         var mins = diffMins % 60
 
+        if (hours >= 24) {
+            var days = Math.floor(hours / 24)
+            var remHours = hours % 24
+            return days + "d " + remHours + "h"
+        }
         if (hours > 0) {
             return hours + "h " + mins + "m"
         }
