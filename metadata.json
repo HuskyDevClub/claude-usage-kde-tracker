@@ -16,7 +16,7 @@
         "Id": "com.github.huskydevclub.claude-usage-kde-tracker",
         "License": "GPL-3.0",
         "Name": "Claude Usage Tracker",
-        "Version": "1.0.0",
+        "Version": "26.3",
         "Website": "https://github.com/HuskyDevClub/claude-usage-kde-tracker"
     },
     "X-Plasma-API-Minimum-Version": "6.0"
