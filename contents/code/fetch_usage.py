@@ -26,6 +26,17 @@ CACHE_DIR = os.path.join(
 )
 
 
+def _num(value: Any, default: float = 0) -> float:
+    """Coerce an API value to a number, treating null/non-numeric as the default.
+
+    The API sends null (not a missing key) for unset fields such as
+    monthly_limit, so dict.get(key, 0) is not enough on its own.
+    """
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return value
+    return default
+
+
 def _atomic_write_json(filepath: str, data: Any, mode: int = 0o600) -> bool:
     """Write JSON to a file atomically using write-to-temp-then-rename.
 
@@ -163,7 +174,7 @@ def parse_usage_item(data: dict, api_key: str) -> dict[str, Any]:
         return {"used": 0, "limit": 100}
 
     result: dict[str, Any] = {
-        "used": item.get("utilization", 0),
+        "used": _num(item.get("utilization")),
         "limit": 100,
     }
     if item.get("resets_at"):
@@ -234,9 +245,9 @@ def fetch_usage() -> dict[str, Any]:
         extra = data.get("extra_usage")
         if extra and isinstance(extra, dict) and extra.get("is_enabled"):
             result["extra"] = {
-                "used": extra.get("used_credits", 0) / 100,
-                "limit": extra.get("monthly_limit", 0) / 100,
-                "utilization": extra.get("utilization", 0),
+                "used": _num(extra.get("used_credits")) / 100,
+                "limit": _num(extra.get("monthly_limit")) / 100,
+                "utilization": _num(extra.get("utilization")),
             }
 
     except requests.exceptions.Timeout:

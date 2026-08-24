@@ -247,7 +247,10 @@ PlasmaExtras.Representation {
                     }
 
                     PlasmaComponents.Label {
-                        text: "$" + root.extraUsed.toFixed(2) + " / $" + root.extraLimit.toFixed(2)
+                        // A limit of 0 means no monthly cap is set on the account
+                        text: root.extraLimit > 0
+                            ? "$" + root.extraUsed.toFixed(2) + " / $" + root.extraLimit.toFixed(2)
+                            : "$" + root.extraUsed.toFixed(2)
                         font: Kirigami.Theme.smallFont
                         opacity: 0.8
                     }
@@ -257,6 +260,7 @@ PlasmaExtras.Representation {
                     Layout.fillWidth: true
                     height: 3
                     radius: height / 2
+                    visible: root.extraLimit > 0
                     color: Qt.alpha(Kirigami.Theme.textColor, 0.1)
 
                     Rectangle {
